@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="clr-namespace:Adeptus.ViewModels"
+             x:DataType="vm:TablePageViewModel"
+             x:Class="Adeptus.Views.TablePageView"
+             Design.DataContext="{x:Static vm:DesignTablePageViewModel.Instance}">
+    <DataGrid ItemsSource="{Binding Issues}"
+              AutoGenerateColumns="False"
+              IsReadOnly="True"
+              GridLinesVisibility="All"
+              RowBackground="{DynamicResource SystemControlBackgroundAltHighBrush}"
+              >
+        <DataGrid.Columns>
+            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
+            <DataGridTextColumn Header="Summary" Binding="{Binding Summary}" Width="*"/>
+            <DataGridTextColumn Header="Updated" Binding="{Binding Updated}" Width="Auto"/>
+        </DataGrid.Columns>
+    </DataGrid>
+</UserControl>
