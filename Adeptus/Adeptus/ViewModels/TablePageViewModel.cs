@@ -15,27 +15,40 @@ public class TablePageViewModel : PageViewModel
     {
     }
 
-    public async Task LoadIssues()
+    public record LoadStats(int Total, int Opened, int Shown);
+
+    public async Task<LoadStats> LoadIssues(string fileName)
     {
-        using var db = new AppDbContext();
-        var data = await db.Issue.AsNoTracking().ToListAsync();
+        using var db = new AppDbContext(fileName);
+        var data = await db.Issues.AsNoTracking().ToListAsync();
 
         Issues.Clear();
+
+        int opened = 0;
+
         foreach (var issue in data)
         {
-            Issues.Add(issue);
+            Issues.Add(new()
+            {
+                Id = issue.Id,
+                Title = issue.Title,
+                IsDone = issue.IsDone,
+                Updated = issue.Updated,
+            });
+
+            if (!issue.IsDone)
+                opened++;
         }
-        DialogManager.ShowInfo("Loading", "Data loaded.");
+
+        return new LoadStats(Issues.Count, opened, Issues.Count);
     }
 }
 
 public class DesignTablePageViewModel : TablePageViewModel
 {
-    public static readonly DesignTablePageViewModel Instance = new ();
-
     public DesignTablePageViewModel() : base()
     {
-        Issues.Add(new() { Id = 35, Summary = "Изменять единицы измерения в редакторах параметров горячими клавишами", Updated = DateTime.Now });
-        Issues.Add(new() { Id = 103, Summary = "Скриптовые пользовательские элементы с произвольным набором параметров", Updated = DateTime.Now });
+        Issues.Add(new() { Id = 35, Title = "Изменять единицы измерения в редакторах параметров горячими клавишами", IsDone = false, Updated = DateTime.Now });
+        Issues.Add(new() { Id = 103, Title = "Скриптовые пользовательские элементы с произвольным набором параметров", IsDone = true, Updated = DateTime.Now });
     }
 }

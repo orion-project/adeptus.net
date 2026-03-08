@@ -80,29 +80,54 @@ public class DialogManager
     }
 
     /// <summary>
-    /// Shows an open file dialog for a registered context, most likely a ViewModel
+    /// Shows an open file dialog for a registered context, most likely a ViewModel,
+    /// and returns a list of selected files or null, if the dialog has been canceled.
     /// </summary>
-    /// <param name="context">The context</param>
-    /// <param name="title">The dialog title, use a default if is null</param>
-    /// <param name="selectMany">Is selecting many files allowed?</param>
-    /// <returns>An array of file names</returns>
-    /// <exception cref="ArgumentNullException">if context was null</exception>
     public static async Task<IEnumerable<string>?> OpenFileDialog(
-        object? context, string? title = null, bool selectMany = true)
+        object? context, string? title = null, bool selectMany = false)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         var topLevel = GetTopLevelForContext(context)
             ?? throw new InvalidOperationException("No TopLevel was resolved for the given context.");
 
-        var storageFiles = await topLevel.StorageProvider.OpenFilePickerAsync(
+        var selectedFiles = await topLevel.StorageProvider.OpenFilePickerAsync(
             new FilePickerOpenOptions()
             {
                 AllowMultiple = selectMany,
-                Title = title ?? "Select any file(s)"
+                Title = title ?? "Open Database",
+                FileTypeFilter =
+                [
+                    new("Adeptus databases") { Patterns = ["*.adeptus"] },
+                    new("All files") { Patterns = ["*.*"] },
+                ],
             });
 
-        return storageFiles.Select(s => s.Name);
+        return selectedFiles.Select(s => s.Path.LocalPath);
+    }
+
+    /// <summary>
+    /// Shows a save file dialog for a registered context, most likely a ViewModel,
+    /// and returns a selected filename or null, if the dialog has been canceled.
+    /// </summary>
+    public static async Task<string?> SaveFileDialog(object? context, string? title = null)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var topLevel = GetTopLevelForContext(context)
+            ?? throw new InvalidOperationException("No TopLevel was resolved for the given context.");
+
+        var selectedFile = await topLevel.StorageProvider.SaveFilePickerAsync(
+            new FilePickerSaveOptions()
+            {
+                Title = title ?? "Create Database",
+                FileTypeChoices =
+                [
+                    new("Adeptus databases") { Patterns = ["*.adeptus"] },
+                ]
+            });
+
+        return selectedFile?.Path.LocalPath;
     }
 
     /// <summary>
@@ -136,7 +161,7 @@ public class DialogManager
     }
 
     /// <summary>
-    /// Closes a dialog window with the given result
+    /// Closes a dialog window for the given context with the given result
     /// </summary>
     /// <param name="context">The context to resolve the window</param>
     /// <param name="result">The result to return</param>
@@ -154,29 +179,29 @@ public class DialogManager
     /// <summary>
     /// Shows an informational pop-up notification
     /// </summary>
-    public static void ShowInfo(string title, string message)
+    public static void ShowInfo(string message, string? title = null)
     {
-        ShowNotificationMessage(title, message, NotificationType.Information);
+        ShowNotificationMessage(message, title ?? "Information", NotificationType.Information);
     }
 
     /// <summary>
     /// Shows an error pop-up notification
     /// </summary>
-    public static void ShowError(string title, string message)
+    public static void ShowError(string message, string? title = null)
     {
-        ShowNotificationMessage(title, message, NotificationType.Error);
+        ShowNotificationMessage(message, title ?? "Error", NotificationType.Error, TimeSpan.FromSeconds(10));
     }
 
     /// <summary>
     /// Adds a notification to the <see cref="WindowNotificationManager"/>.
     /// </summary>
     private static void ShowNotificationMessage(
-        string title, string message, NotificationType notificationType, TimeSpan? expiration = null)
+        string message, string title, NotificationType notificationType, TimeSpan? expiration = null)
     {
         var notificationManager = NotificationManager
             ?? throw new InvalidOperationException("WindowNotificationManager is not provided");
 
         notificationManager.Show(
-            new Notification(title, message, notificationType, expiration ?? TimeSpan.FromSeconds(3)));
+            new Notification(title, message, notificationType, expiration ?? TimeSpan.FromSeconds(5)));
     }
 }

@@ -1,47 +1,107 @@
+using Adeptus.Models;
 using Adeptus.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Adeptus.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    private readonly TablePageViewModel _tablePageViewModel = new();
-
     public ObservableCollection<PageViewModel> Pages { get; } = [];
-
-    public ObservableCollection<string> Results { get; } = [];
 
     [ObservableProperty]
     public partial PageViewModel? SelectedPage { get; set; }
 
-    public MainWindowViewModel()
+    [ObservableProperty]
+    public partial int TotalIssues { get; protected set; }
+
+    [ObservableProperty]
+    public partial int OpenedIssues { get; protected set; }
+
+    [ObservableProperty]
+    public partial int ShownIssues { get; protected set; }
+
+    [ObservableProperty]
+    public partial string DatabaseFilePath { get; protected set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string DatabaseFileName { get; protected set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string WindowTitle { get; protected set; } = "Adeptus";
+
+    [RelayCommand]
+    private async Task CreateDatabase()
     {
-        Pages.Add(_tablePageViewModel);
+        try
+        {
+            var filePath = await DialogManager.SaveFileDialog(this, "Create Database");
+            if (filePath is null)
+                return;
+
+            await LoadDatabase(filePath);
+        }
+        catch (Exception e)
+        {
+            DialogManager.ShowError(e.Message, "Failed to create database");
+        }
     }
 
     [RelayCommand]
     private async Task OpenDatabase()
     {
-        await _tablePageViewModel.LoadIssues();
-
-        var results = await DialogManager.OpenFileDialog(this, "Select some files");
-
-        if (results is null)
-            return;
-
-        foreach (var result in results)
+        try
         {
-            Results.Insert(0, $"file added: {result}");
+            var filePaths = await DialogManager.OpenFileDialog(this, "Open Database");
+            if (filePaths is null)
+                return;
+
+            var filePath = filePaths.First();
+
+            await LoadDatabase(filePath);
+        }
+        catch (Exception e)
+        {
+            DialogManager.ShowError(e.Message, "Failed to open database");
         }
     }
 
     [RelayCommand]
     private async Task DemoLoadDatabase()
     {
-        await _tablePageViewModel.LoadIssues();
+        try
+        {
+            await LoadDatabase("demo.adeptus");
+        }
+        catch (Exception e)
+        {
+            DialogManager.ShowError(e.Message, "Failed to load database");
+        }
+    }
+
+    private async Task LoadDatabase(string filePath)
+    {
+        AppDbContext.Migrate(filePath);
+
+        var tablePage = new TablePageViewModel();
+        var stats = await tablePage.LoadIssues(filePath);
+
+        TotalIssues = stats.Total;
+        OpenedIssues = stats.Opened;
+        ShownIssues = stats.Shown;
+        DatabaseFilePath = filePath;
+        DatabaseFileName = Path.GetFileName(filePath);
+        WindowTitle = $"{DatabaseFileName} - Adeptus";
+
+        Pages.Clear();
+        Pages.Add(tablePage);
+
+        DialogManager.ShowInfo(DatabaseFileName, "Data loaded");
     }
 
     [RelayCommand]
@@ -49,7 +109,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         var dialogViewModel = new InputDialogViewModel("Type some text:", "");
         var text = await DialogManager.ShowDialogWindow<string?>(this, "Text Input", dialogViewModel);
-        Results.Add(string.IsNullOrEmpty(text) ? "Dialog was canceled" : $"The text entered: \"{text}\"");
+        DialogManager.ShowInfo(string.IsNullOrEmpty(text) ? "Dialog was canceled" : $"The text entered: \"{text}\"");
     }
 
     [RelayCommand]
@@ -80,5 +140,21 @@ public partial class MainWindowViewModel : ViewModelBase
         var page = new IssuePageViewModel(ClosePageRequested);
         Pages.Add(page);
         SelectedPage = page;
+    }
+}
+
+public class DesignMainWindowViewModel : MainWindowViewModel
+{
+    public DesignMainWindowViewModel() : base()
+    {
+        //Pages.Add(new DesignTablePageViewModel());
+        //Pages.Add(new DesignIssuePageViewModel());
+        //Pages.Add(new DesignIssuePageViewModel());
+
+        TotalIssues = 255;
+        OpenedIssues = 21;
+        ShownIssues = 247;
+        DatabaseFilePath = "/home/user/Adeptus/databases/Demo.adeptus";
+        DatabaseFileName = "Demo.adeptus";
     }
 }

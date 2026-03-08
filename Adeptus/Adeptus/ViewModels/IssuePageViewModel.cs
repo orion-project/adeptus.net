@@ -8,12 +8,19 @@ public class IssuePageViewModel : PageViewModel
 
     private readonly int _pageIndex = ++_prevPageIndex;
 
-    public IssuePageViewModel(Action<PageViewModel>? closeAction = null) : base(closeAction)
+    public IssuePageViewModel(Action<PageViewModel> closeAction) : base(closeAction)
     {
     }
 
     public string Header
     {
         get => $"[#{_pageIndex}] Issue";
+    }
+}
+
+public class DesignIssuePageViewModel : IssuePageViewModel
+{
+    public DesignIssuePageViewModel() : base(_ => { })
+    {
     }
 }

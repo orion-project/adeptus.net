@@ -5,17 +5,21 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:vm="clr-namespace:Adeptus.ViewModels"
              x:DataType="vm:TablePageViewModel"
-             x:Class="Adeptus.Views.TablePageView"
-             Design.DataContext="{x:Static vm:DesignTablePageViewModel.Instance}">
+             x:Class="Adeptus.Views.TablePageView">
+
+    <Design.DataContext>
+        <vm:DesignTablePageViewModel/>
+    </Design.DataContext>
+
     <DataGrid ItemsSource="{Binding Issues}"
               AutoGenerateColumns="False"
               IsReadOnly="True"
               GridLinesVisibility="All"
-              RowBackground="{DynamicResource SystemControlBackgroundAltHighBrush}"
-              >
+              Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
         <DataGrid.Columns>
             <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
-            <DataGridTextColumn Header="Summary" Binding="{Binding Summary}" Width="*"/>
+            <DataGridTextColumn Header="Summary" Binding="{Binding Title}" Width="*"/>
+            <DataGridCheckBoxColumn Header="Done" Binding="{Binding IsDone}" Width="Auto"/>
             <DataGridTextColumn Header="Updated" Binding="{Binding Updated}" Width="Auto"/>
         </DataGrid.Columns>
     </DataGrid>

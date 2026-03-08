@@ -10,10 +10,11 @@
         x:DataType="vm:MainWindowViewModel"
         services:DialogManager.Register="{Binding}"
         Icon="/Assets/icon.ico"
-        Title="Adeptus">
+        Title="{Binding WindowTitle}"
+        >
 
     <Design.DataContext>
-        <vm:MainWindowViewModel/>
+        <vm:DesignMainWindowViewModel/>
     </Design.DataContext>
 
     <Window.KeyBindings>
@@ -116,12 +117,24 @@
         <Style Selector="TabItem:nth-child(1)">
             <Setter Property="Margin" Value="5,0,0,-2" />
         </Style>
+
+        <!-- Status bar -->
+        <Style Selector="TextBlock.StatusBar">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Opacity" Value="0.6"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.StatusBarValue">
+            <Setter Property="Margin" Value="3,0,20,0"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
     </Window.Styles>
 
     <DockPanel>
         <Menu DockPanel.Dock="Top" Margin="0,3,0,3">
             <MenuItem Header="_File">
-                <MenuItem Header="_Open" InputGesture="Ctrl+O" Command="{Binding OpenDatabaseCommand}"/>
+                <MenuItem Header="_New..." Command="{Binding CreateDatabaseCommand}"/>
+                <MenuItem Header="_Open..." InputGesture="Ctrl+O" Command="{Binding OpenDatabaseCommand}"/>
                 <MenuItem Header="_Load Demo DB" InputGesture="Ctrl+L" Command="{Binding DemoLoadDatabaseCommand}"/>
                 <Separator/>
                 <MenuItem Header="_Exit"/>
@@ -138,6 +151,25 @@
                 <MenuItem Header="_About" Command="{Binding ShowAboutDialogCommand}"/>
             </MenuItem>
         </Menu>
+
+        <!-- Status bar -->
+        <Border DockPanel.Dock="Bottom"
+                BorderBrush="{DynamicResource SystemControlHighlightListLowBrush}"
+                BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal"
+                        Height="30"
+                        Margin="8,0,0,0">
+                <TextBlock Classes="StatusBar" Text="Issues Total:"/>
+                <TextBlock Classes="StatusBar StatusBarValue" Text="{Binding TotalIssues}"/>
+                <TextBlock Classes="StatusBar" Text="Opened:"/>
+                <TextBlock Classes="StatusBar StatusBarValue" Text="{Binding OpenedIssues}"/>
+                <TextBlock Classes="StatusBar" Text="Displayed:"/>
+                <TextBlock Classes="StatusBar StatusBarValue" Text="{Binding ShownIssues}"/>
+                <TextBlock Classes="StatusBar StatusBarValue" Text="{Binding DatabaseFilePath}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Issue tabs -->
         <TabControl ItemsSource="{Binding Pages}"
                     ItemTemplate="{StaticResource TabItemTemplateSelector}"
                     SelectedItem="{Binding SelectedPage}">
