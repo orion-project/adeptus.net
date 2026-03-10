@@ -140,7 +140,7 @@ public class DialogManager
     /// <typeparam name="T">The expected type to return</typeparam>
     /// <returns>The result or null if dialog was canceled</returns>
     /// <exception cref="InvalidOperationException">The dialog window can only be shown if the app is a desktop app.</exception>
-    public static async Task<T?> ShowDialogWindow<T>(
+    public static async Task<T?> ShowDialog<T>(
         object? context, string windowTitle, object content, IDataTemplate? contentTemplate = null)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -163,17 +163,27 @@ public class DialogManager
     /// <summary>
     /// Closes a dialog window for the given context with the given result
     /// </summary>
-    /// <param name="context">The context to resolve the window</param>
-    /// <param name="result">The result to return</param>
-    /// <exception cref="InvalidOperationException">If the <see cref="TopLevel"/> is not a <see cref="Window"/></exception>
-    public static void ReturnResultFromDialogWindow(object? context, object? result)
+    public static void AcceptDialog(object? context, object? result)
     {
         ArgumentNullException.ThrowIfNull(context);
 
         var dialogWindow = GetTopLevelForContext(context) as Window
-            ?? throw new InvalidOperationException("The method ReturnResultFromDialogWindow can only be used on a Window");
+            ?? throw new InvalidOperationException("The method AcceptDialog can only be used on a Window");
 
         dialogWindow.Close(result);
+    }
+
+    /// <summary>
+    /// Closes a dialog window for the given context without a result
+    /// </summary>
+    public static void CancelDialog(object? context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var dialogWindow = GetTopLevelForContext(context) as Window
+            ?? throw new InvalidOperationException("The method CancelDialog can only be used on a Window");
+
+        dialogWindow.Close();
     }
 
     /// <summary>

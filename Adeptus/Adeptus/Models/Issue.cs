@@ -11,3 +11,5 @@ public class Issue
 
     public required DateTime Updated {  get; set; }
 }
+
+public record IssueCreateData(string Title, string Description);

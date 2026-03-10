@@ -7,7 +7,7 @@ public class IssueDbo
     /// <summary>
     /// Issue identifier (auto-generated)
     /// </summary>
-    public required int Id { get; set; }
+    public int? Id { get; set; }
 
     /// <summary>
     /// Short issue description, one row without line breakes
@@ -22,20 +22,20 @@ public class IssueDbo
     /// <summary>
     /// A date when the issue was created
     /// </summary>
-    public required DateTime Created { get; set; }
+    public DateTime Created { get; set; } = DateTime.Now;
 
     /// <summary>
     /// A date when the issue was updated
     /// </summary>
-    public required DateTime Updated { get; set; }
+    public DateTime Updated { get; set; } = DateTime.Now;
 
     /// <summary>
     /// A workplace where the issue was created, e.g. "home", "work"
     /// </summary>
-    public required string Place { get; set; }
+    public string Place { get; set; } = string.Empty;
 
     /// <summary>
     /// If the issue is completed (solved, closed)
     /// </summary>
-    public required bool IsDone { get; set; }
+    public bool IsDone { get; set; } = false;
 }

@@ -14,7 +14,7 @@
         <TextBox Text="{Binding InputText}" />
         <!-- The Dialog Buttons -->
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="5">
-            <Button Content="OK" Command="{Binding ReturnResultCommand}" IsDefault="True" />
+            <Button Content="OK" Command="{Binding AcceptCommand}" IsDefault="True" />
             <Button Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" />
         </StackPanel>
     </StackPanel>

@@ -12,6 +12,7 @@
     </Design.DataContext>
 
     <DataGrid ItemsSource="{Binding Issues}"
+              SelectedItem="{Binding SelectedIssue}"
               AutoGenerateColumns="False"
               IsReadOnly="True"
               GridLinesVisibility="All"

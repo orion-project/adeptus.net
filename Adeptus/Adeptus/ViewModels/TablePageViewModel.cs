@@ -1,46 +1,32 @@
 using Adeptus.Models;
-using Adeptus.Services;
-using Microsoft.EntityFrameworkCore;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 namespace Adeptus.ViewModels;
 
-public class TablePageViewModel : PageViewModel
+public partial class TablePageViewModel : PageViewModel
 {
     public ObservableCollection<Issue> Issues { get; private set; } = [];
 
-    public TablePageViewModel() : base()
-    {
-    }
+    [ObservableProperty]
+    public partial Issue? SelectedIssue { get; set; }
 
-    public record LoadStats(int Total, int Opened, int Shown);
+    public Action? OnIssuesLoaded { get; set; }
 
-    public async Task<LoadStats> LoadIssues(string fileName)
+    public async Task LoadIssues(string fileName)
     {
         using var db = new AppDbContext(fileName);
-        var data = await db.Issues.AsNoTracking().ToListAsync();
+        var issues = await db.GetIssues();
 
         Issues.Clear();
-
-        int opened = 0;
-
-        foreach (var issue in data)
+        foreach (var issue in issues)
         {
-            Issues.Add(new()
-            {
-                Id = issue.Id,
-                Title = issue.Title,
-                IsDone = issue.IsDone,
-                Updated = issue.Updated,
-            });
-
-            if (!issue.IsDone)
-                opened++;
+            Issues.Add(issue);
         }
 
-        return new LoadStats(Issues.Count, opened, Issues.Count);
+        OnIssuesLoaded?.Invoke();
     }
 }
 

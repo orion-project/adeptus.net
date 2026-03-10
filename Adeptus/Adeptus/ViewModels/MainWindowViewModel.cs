@@ -35,6 +35,18 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     public partial string WindowTitle { get; protected set; } = "Adeptus";
 
+    private TablePageViewModel TablePage
+    {
+        get
+        {
+            if (Pages.Count == 0)
+                throw new Exception("Database is not opened");
+            if (Pages.First() is not TablePageViewModel vm)
+                throw new Exception("Invalid pages structure");
+            return vm;
+        }
+    }
+
     [RelayCommand]
     private async Task CreateDatabase()
     {
@@ -48,6 +60,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (Exception e)
         {
+            ResetDatabase();
             DialogManager.ShowError(e.Message, "Failed to create database");
         }
     }
@@ -67,6 +80,7 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (Exception e)
         {
+            ResetDatabase();
             DialogManager.ShowError(e.Message, "Failed to open database");
         }
     }
@@ -80,35 +94,60 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         catch (Exception e)
         {
+            ResetDatabase();
             DialogManager.ShowError(e.Message, "Failed to load database");
         }
     }
 
+    private void ResetDatabase()
+    {
+        Pages.Clear();
+        DatabaseFilePath = string.Empty;
+        DatabaseFileName = string.Empty;
+        WindowTitle = "Adeptus";
+        TotalIssues = 0;
+        ShownIssues = 0;
+        OpenedIssues = 0;
+    }
+
     private async Task LoadDatabase(string filePath)
     {
-        AppDbContext.Migrate(filePath);
+        ResetDatabase();
 
-        var tablePage = new TablePageViewModel();
-        var stats = await tablePage.LoadIssues(filePath);
-
-        TotalIssues = stats.Total;
-        OpenedIssues = stats.Opened;
-        ShownIssues = stats.Shown;
         DatabaseFilePath = filePath;
         DatabaseFileName = Path.GetFileName(filePath);
         WindowTitle = $"{DatabaseFileName} - Adeptus";
 
-        Pages.Clear();
+        var tablePage = new TablePageViewModel();
+        tablePage.OnIssuesLoaded += UpdateIssueCounters;
         Pages.Add(tablePage);
 
+        AppDbContext.Migrate(filePath);
+
+        await tablePage.LoadIssues(filePath);
+
         DialogManager.ShowInfo(DatabaseFileName, "Data loaded");
+    }
+
+    private void UpdateIssueCounters()
+    {
+        var issues = TablePage.Issues;
+        var opened = 0;
+        foreach (var issue in issues)
+        {
+            if (!issue.IsDone)
+                opened++;
+        }
+        TotalIssues = issues.Count;
+        ShownIssues = issues.Count;
+        OpenedIssues = opened;
     }
 
     [RelayCommand]
     private async Task DemoShowInputDialog()
     {
         var dialogViewModel = new InputDialogViewModel("Type some text:", "");
-        var text = await DialogManager.ShowDialogWindow<string?>(this, "Text Input", dialogViewModel);
+        var text = await DialogManager.ShowDialog<string?>(this, "Text Input", dialogViewModel);
         DialogManager.ShowInfo(string.IsNullOrEmpty(text) ? "Dialog was canceled" : $"The text entered: \"{text}\"");
     }
 
@@ -135,11 +174,29 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void MakeNewIssue()
+    private async Task MakeNewIssue()
     {
-        var page = new IssuePageViewModel(ClosePageRequested);
-        Pages.Add(page);
-        SelectedPage = page;
+        //var page = new IssuePageViewModel(ClosePageRequested);
+        //Pages.Add(page);
+        //SelectedPage = page;
+        try
+        {
+            var vm = new CreateIssueDialogViewModel();
+            var newIssueData = await vm.ShowDialog(this, "Create Issue");
+            if (newIssueData != null)
+            {
+                using var db = new AppDbContext(DatabaseFilePath);
+                var newIssue = await db.CreateIssue(newIssueData);
+                TablePage.Issues.Add(newIssue);
+                TablePage.SelectedIssue = newIssue;
+                UpdateIssueCounters();
+                DialogManager.ShowInfo($"New issue #{newIssue.Id} created");
+            }
+        }
+        catch (Exception e)
+        {
+            DialogManager.ShowError(e.Message, "Failed to create issue");
+        }
     }
 }
 
@@ -147,9 +204,9 @@ public class DesignMainWindowViewModel : MainWindowViewModel
 {
     public DesignMainWindowViewModel() : base()
     {
-        //Pages.Add(new DesignTablePageViewModel());
-        //Pages.Add(new DesignIssuePageViewModel());
-        //Pages.Add(new DesignIssuePageViewModel());
+        Pages.Add(new DesignTablePageViewModel());
+        Pages.Add(new DesignIssuePageViewModel());
+        Pages.Add(new DesignIssuePageViewModel());
 
         TotalIssues = 255;
         OpenedIssues = 21;

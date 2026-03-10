@@ -47,20 +47,22 @@
                     </Button>
                 </Grid>
             </DataTemplate>
+            <DataTemplate x:Key="Default">
+                <TextBlock Text="?"/>
+            </DataTemplate>
         </local:DataTemplateSelector>
     </Window.Resources>
 
     <Window.Styles>
+        <StyleInclude Source="../Styles/TabControlStyles.axaml" />
+
         <Style Selector="MenuItem">
             <Setter Property="Margin" Value="4,0,4,0"/>
             <Setter Property="CornerRadius" Value="4"/>
         </Style>
 
-        <Style Selector="TabControl">
-            <Setter Property="Padding" Value="0"/>
-        </Style>
-
-        <Style Selector="Button.PageCloseButton">
+        <!-- Close button in tab header -->
+        <Style Selector="TabItem Button.PageCloseButton">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Opacity" Value="0"/>
             <Setter Property="Padding" Value="0"/>
@@ -73,49 +75,8 @@
                 </Transitions>
             </Setter>
         </Style>
-
         <Style Selector="TabItem:pointerover Button.PageCloseButton">
             <Setter Property="Opacity" Value="1"/>
-        </Style>
-
-        <Style Selector="TabItem">
-            <Setter Property="MinHeight" Value="30"/>
-            <Setter Property="CornerRadius" Value="8,8,0,0"/>
-            <Setter Property="Margin" Value="2,0,0,-2"/>
-            <Setter Property="FontSize" Value="16"/>
-        </Style>
-
-        <Style Selector="TabItem:selected">
-            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
-            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundAltHighBrush}"/>
-        </Style>
-
-        <!-- Hide selected text underline -->
-        <Style Selector="TabItem:selected /template/ Border#PART_SelectedPipe">
-            <Setter Property="IsVisible" Value="False" />
-        </Style>
-
-        <!-- Hover effects for TabItem -->
-        <Style Selector="TabItem:pointerover /template/ Border#PART_LayoutRoot">
-            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
-        </Style>
-        <!-- Prevent automatic hover effects for selected TabItem - set the same style as for non-hovered -->
-        <Style Selector="TabItem:selected:pointerover /template/ Border#PART_LayoutRoot">
-            <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
-        </Style>
-        <Style Selector="TabItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundAltHighBrush}"/>
-        </Style>
-
-        <!-- Separator line belowe tabs (actually, above the content) -->
-        <Style Selector="TabControl /template/ ContentPresenter#PART_SelectedContentHost">
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
-            <Setter Property="BorderThickness" Value="0,1,0,0" /> <!-- Only top border -->
-            <Setter Property="Padding" Value="0"/>
-        </Style>
-
-        <Style Selector="TabItem:nth-child(1)">
-            <Setter Property="Margin" Value="5,0,0,-2" />
         </Style>
 
         <!-- Status bar -->
@@ -171,8 +132,8 @@
 
         <!-- Issue tabs -->
         <TabControl ItemsSource="{Binding Pages}"
-                    ItemTemplate="{StaticResource TabItemTemplateSelector}"
-                    SelectedItem="{Binding SelectedPage}">
+                    SelectedItem="{Binding SelectedPage}"
+                    ItemTemplate="{StaticResource TabItemTemplateSelector}">
             <TabControl.ContentTemplate>
                 <DataTemplate>
                     <ContentControl Content="{Binding}" />

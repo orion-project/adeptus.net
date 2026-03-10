@@ -1,0 +1,274 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
+        xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
+        xmlns:mdctl="clr-namespace:Markdown.Avalonia.Controls;assembly=Markdown.Avalonia"
+        xmlns:avedit="https://github.com/avaloniaui/avaloniaedit">
+    <Design.PreviewWith>
+        <Border Background="White" Padding="5">
+            <!-- Add Controls for Previewer Here -->
+            <md:MarkdownScrollViewer xml:space="preserve">
+                <md:MarkdownScrollViewer.Styles>
+                    <Style Selector="md|MarkdownScrollViewer ctxt|CTextBlock.Heading1">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                         <Setter Property="FontSize" Value="24"/>
+                    </Style>
+                    <Style Selector="md|MarkdownScrollViewer ctxt|CTextBlock.Heading2">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize" Value="20"/>
+                    </Style>
+                    <Style Selector="md|MarkdownScrollViewer ctxt|CTextBlock.Heading3">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize" Value="16"/>
+                    </Style>
+                    <!-- Blockquote -->
+                    <Style Selector="md|MarkdownScrollViewer Border.Blockquote">
+                        <Setter Property="Margin" Value="0,4,0,4"/>
+                        <Setter Property="BorderThickness" Value="6,0,0,0"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+                        <Setter Property="Background" Value="#f5f5f9" />
+                    </Style>
+                    <!-- Separator lines -->
+                    <Style Selector="md|MarkdownScrollViewer mdctl|Rule.Single">
+                        <Setter Property="LineMargin" Value="4"/>
+                        <Setter Property="SingleLineWidth" Value="1.5"/>
+                        <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightBaseMediumLowBrush}"/>
+                    </Style>
+                    <Style Selector="mdctl|Rule.TwoLines">
+                        <Setter Property="Margin" Value="0,6,0,6"/>
+                        <Setter Property="LineMargin" Value="2"/>
+                        <Setter Property="SingleLineWidth" Value="1"/>
+                        <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightBaseMediumLowBrush}"/>
+                    </Style>
+                    <Style Selector="mdctl|Rule.Bold">
+                        <Setter Property="Margin" Value="0,4,0,4"/>
+                        <Setter Property="BoldLineWidth" Value="4"/>
+                        <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightBaseMediumLowBrush}"/>
+                    </Style>
+                    <Style Selector="mdctl|Rule.BoldWithSingle">
+                        <Setter Property="Margin" Value="0,4,0,4"/>
+                        <Setter Property="LineMargin" Value="2"/>
+                        <Setter Property="SingleLineWidth" Value="2"/>
+                        <Setter Property="BoldLineWidth" Value="4"/>
+                        <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightBaseMediumLowBrush}"/>
+                    </Style>
+                    <!-- Link -->
+                    <Style Selector="ctxt|CHyperlink">
+                        <Setter Property="Foreground" Value="#2571b1"/>
+                    </Style>
+                    <Style Selector="ctxt|CHyperlink:pointerover">
+                        <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
+                    </Style>
+                    <!-- Table -->
+                    <Style Selector="Border.Table">
+                        <Setter Property="Margin" Value="0,5,0,5"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                    </Style>
+                    <Style Selector="Border.TableHeader">
+                        <Setter Property="Padding" Value="5,3"/>
+                        <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                    </Style>
+                    <Style Selector="Border.OddTableRow">
+                        <Setter Property="Padding" Value="5,3"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                    </Style>
+                    <Style Selector="Border.EvenTableRow">
+                        <Setter Property="Padding" Value="5,3"/>
+                        <Setter Property="Background" Value="#f5f5f9"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                    </Style>
+                    <!-- Inline code -->
+                    <Style Selector="ctxt|CCode">
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Padding" Value="4,0,4,0"/>
+                        <Setter Property="MonospaceFontFamily" Value="Consolas"/>
+                        <Setter Property="Foreground" Value="DarkBlue"/>
+                        <Setter Property="Background" Value="#f5f5f9"/>
+                        <Setter Property="CornerRadius" Value="3"/>
+                    </Style>
+                    <!-- Code block -->
+                    <Style Selector="Border.CodeBlock">
+                        <Setter Property="Margin" Value="0,5,0,5"/>
+                        <Setter Property="Padding" Value="5"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Background" Value="#f5f5f9"/>
+                    </Style>
+                    <Style Selector="TextBlock.CodeBlock">
+                        <Setter Property="Foreground" Value="DarkBlue"/>
+                        <Setter Property="FontFamily" Value="Consolas"/>
+                    </Style>
+                    <Style Selector="avedit|TextEditor">
+                        <Setter Property="Foreground" Value="DarkBlue"/>
+                        <Setter Property="FontFamily" Value="Consolas"/>
+                    </Style>
+                    <!-- List -->
+                    <Style Selector="Grid.List">
+                        <Setter Property="Margin" Value="15,0,0,0"/>
+                    </Style>
+                </md:MarkdownScrollViewer.Styles>
+                # Header1
+
+                ## Header 2
+
+                ### Header 3
+
+                some text [Goolge.com](http://google.com)
+
+                ----
+
+                inline code: `this is inline`
+
+                * Item 1
+                * Item 2
+
+                ===
+
+                Text text text
+
+                > Blockquote
+                >   - item 1
+                >   - item 2
+
+                Text text text
+
+                ***
+
+                Text text text
+
+                ___
+
+                Text text text
+
+                |  column1   |  column2   |
+                |------------|------------|
+                | odd  cell1 | odd  cell2 |
+                | even cell1 | even cell2 |
+                | odd  cell1 | odd  cell2 |
+                | even cell1 | even cell2 |
+
+                And some code
+
+                ```c
+                #include &lt;stdio.h&gt;
+                int main()
+                {
+                    // printf() displays the string inside quotation
+                    printf("Hello, World!");
+                    return 0;
+                }
+                ```
+                Text text text
+
+            </md:MarkdownScrollViewer>
+        </Border>
+    </Design.PreviewWith>
+
+    <!-- Add Styles Here -->
+    <!--
+    The preview above doesn't see these styles.
+    The workaround is to design styles there in the preview's own style block
+    and the copy them here to reuse in other controls
+    -->
+                    <Style Selector="md|MarkdownScrollViewer ctxt|CTextBlock.Heading1">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                         <Setter Property="FontSize" Value="24"/>
+                    </Style>
+                    <Style Selector="md|MarkdownScrollViewer ctxt|CTextBlock.Heading2">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize" Value="20"/>
+                    </Style>
+                    <Style Selector="md|MarkdownScrollViewer ctxt|CTextBlock.Heading3">
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize" Value="16"/>
+                    </Style>
+                    <!-- Blockquote -->
+                    <Style Selector="md|MarkdownScrollViewer Border.Blockquote">
+                        <Setter Property="Margin" Value="0,4,0,4"/>
+                        <Setter Property="BorderThickness" Value="6,0,0,0"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+                        <Setter Property="Background" Value="#f5f5f9" />
+                    </Style>
+                    <!-- Separator lines -->
+                    <Style Selector="md|MarkdownScrollViewer mdctl|Rule.Single">
+                        <Setter Property="LineMargin" Value="4"/>
+                        <Setter Property="SingleLineWidth" Value="1.5"/>
+                        <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightBaseMediumLowBrush}"/>
+                    </Style>
+                    <Style Selector="mdctl|Rule.TwoLines">
+                        <Setter Property="Margin" Value="0,6,0,6"/>
+                        <Setter Property="LineMargin" Value="2"/>
+                        <Setter Property="SingleLineWidth" Value="1"/>
+                        <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightBaseMediumLowBrush}"/>
+                    </Style>
+                    <Style Selector="mdctl|Rule.Bold">
+                        <Setter Property="Margin" Value="0,4,0,4"/>
+                        <Setter Property="BoldLineWidth" Value="4"/>
+                        <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightBaseMediumLowBrush}"/>
+                    </Style>
+                    <Style Selector="mdctl|Rule.BoldWithSingle">
+                        <Setter Property="Margin" Value="0,4,0,4"/>
+                        <Setter Property="LineMargin" Value="2"/>
+                        <Setter Property="SingleLineWidth" Value="2"/>
+                        <Setter Property="BoldLineWidth" Value="4"/>
+                        <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightBaseMediumLowBrush}"/>
+                    </Style>
+                    <!-- Link -->
+                    <Style Selector="ctxt|CHyperlink">
+                        <Setter Property="Foreground" Value="#2571b1"/>
+                    </Style>
+                    <Style Selector="ctxt|CHyperlink:pointerover">
+                        <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
+                    </Style>
+                    <!-- Table -->
+                    <Style Selector="Border.Table">
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                    </Style>
+                    <Style Selector="Border.TableHeader">
+                        <Setter Property="Padding" Value="5,3"/>
+                        <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                    </Style>
+                    <Style Selector="Border.OddTableRow">
+                        <Setter Property="Padding" Value="5,3"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                    </Style>
+                    <Style Selector="Border.EvenTableRow">
+                        <Setter Property="Padding" Value="5,3"/>
+                        <Setter Property="Background" Value="#f5f5f9"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                    </Style>
+                    <!-- Inline code -->
+                    <Style Selector="ctxt|CCode">
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Padding" Value="4,0,4,0"/>
+                        <Setter Property="MonospaceFontFamily" Value="Consolas"/>
+                        <Setter Property="Foreground" Value="DarkBlue"/>
+                        <Setter Property="Background" Value="#f5f5f9"/>
+                        <Setter Property="CornerRadius" Value="3"/>
+                    </Style>
+                    <!-- Code block -->
+                    <Style Selector="Border.CodeBlock">
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="Padding" Value="5"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Background" Value="#f5f5f9"/>
+                    </Style>
+                    <Style Selector="TextBlock.CodeBlock">
+                        <Setter Property="Foreground" Value="DarkBlue"/>
+                        <Setter Property="FontFamily" Value="Consolas"/>
+                    </Style>
+                    <Style Selector="avedit|TextEditor">
+                        <Setter Property="Foreground" Value="DarkBlue"/>
+                        <Setter Property="FontFamily" Value="Consolas"/>
+                    </Style>
+                    <!-- List -->
+                    <Style Selector="Grid.List">
+                        <Setter Property="Margin" Value="15,0,0,0"/>
+                    </Style>
+</Styles>

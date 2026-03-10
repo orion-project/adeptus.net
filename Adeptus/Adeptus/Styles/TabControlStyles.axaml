@@ -1,0 +1,65 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.PreviewWith>
+        <Border>
+        <!-- Add Controls for Previewer Here -->
+            <TabControl>
+                <TabItem Header="Tab 1">
+                    <Border Height="100" Background="White"/>
+                </TabItem>
+                <TabItem Header="Tab 2">
+                    <Border Height="100"/>
+                </TabItem>
+                <TabItem Header="Tab 3">
+                    <Border Height="100"/>
+                </TabItem>
+            </TabControl>
+        </Border>
+    </Design.PreviewWith>
+
+    <!-- Add Styles Here -->
+    <Style Selector="TabControl">
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <Style Selector="TabItem">
+        <Setter Property="MinHeight" Value="30"/>
+        <Setter Property="CornerRadius" Value="8,8,0,0"/>
+        <Setter Property="Margin" Value="2,0,0,-2"/>
+        <Setter Property="Padding" Value="15,0"/>
+        <Setter Property="FontSize" Value="14"/>
+    </Style>
+
+    <Style Selector="TabItem:selected">
+        <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
+        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundAltHighBrush}"/>
+    </Style>
+
+    <!-- Hide selected text underline -->
+    <Style Selector="TabItem:selected /template/ Border#PART_SelectedPipe">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+
+    <!-- Hover effects for TabItem -->
+    <Style Selector="TabItem:pointerover /template/ Border#PART_LayoutRoot">
+        <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+    </Style>
+    <!-- Prevent automatic hover effects for selected TabItem - set the same style as for non-hovered -->
+    <Style Selector="TabItem:selected:pointerover /template/ Border#PART_LayoutRoot">
+        <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
+    </Style>
+    <Style Selector="TabItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundAltHighBrush}"/>
+    </Style>
+
+    <!-- Separator line belowe tabs (actually, above the content) -->
+    <Style Selector="TabControl /template/ ContentPresenter#PART_SelectedContentHost">
+        <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" /> <!-- Only top border -->
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <Style Selector="TabItem:nth-child(1)">
+        <Setter Property="Margin" Value="5,0,0,-2" />
+    </Style>
+</Styles>

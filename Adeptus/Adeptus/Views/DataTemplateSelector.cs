@@ -19,12 +19,17 @@ public class DataTemplateSelector : IDataTemplate
         if (param == null) return null;
 
         var typeName = param.GetType().Name;
-        if (Templates.TryGetValue(typeName, out var template))
+        if (!Templates.TryGetValue(typeName, out IDataTemplate? template))
         {
-            return template.Build(param);
+            // Find template for a base type for cases
+            // DesignSomeViewModel --> SomeViewModel
+            typeName = param.GetType().BaseType?.Name ?? "Default";
+            if (!Templates.TryGetValue(typeName, out template))
+            {
+                throw new InvalidDataException($"Data template not found for {typeName}");
+            }
         }
-
-        throw new InvalidDataException($"Data template not found for {typeName}");
+        return template.Build(param);
     }
 
     public bool Match(object? data) => true;
