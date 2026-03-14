@@ -29,7 +29,7 @@
                  Text="{Binding Title, Mode=TwoWay}"/>
         <TabControl Grid.Row="2"
                     Margin="0,15,0,0">
-            <TabItem Header="Description">
+            <TabItem Header="Details">
                 <TextBox Margin="0,8,0,0"
                          Padding="5"
                          AcceptsTab="false"
@@ -37,7 +37,7 @@
                          TextWrapping="Wrap"
                          Watermark="Enter full description"
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
-                         Text="{Binding Description}"/>
+                         Text="{Binding Details}"/>
             </TabItem>
             <TabItem Header="Preview">
                 <Border Margin="0,8,0,0"
@@ -46,7 +46,7 @@
                         BorderBrush="{DynamicResource TextControlBorderBrush}"
                         BorderThickness="{DynamicResource TextControlBorderThemeThickness}"
                         CornerRadius="{DynamicResource ControlCornerRadius}">
-                    <md:MarkdownScrollViewer Markdown="{Binding Description}">
+                    <md:MarkdownScrollViewer Markdown="{Binding Details}">
                         <md:MarkdownScrollViewer.Styles>
                             <StyleInclude Source="../Styles/MarkdownViewerStyles.axaml" />
                         </md:MarkdownScrollViewer.Styles>

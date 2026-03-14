@@ -5,7 +5,6 @@ namespace Adeptus.ViewModels;
 
 public partial class InputDialogViewModel(string prompt = "Input text:", string? defaultValue = null) : DialogViewModel<string>
 {
-
     /// <summary>
     /// Gets or sets the prompt text to display
     /// </summary>

@@ -27,6 +27,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public partial int ShownIssues { get; protected set; }
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(MakeNewIssueCommand))]
     public partial string DatabaseFilePath { get; protected set; } = string.Empty;
 
     [ObservableProperty]
@@ -85,20 +86,6 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    [RelayCommand]
-    private async Task DemoLoadDatabase()
-    {
-        try
-        {
-            await LoadDatabase("demo.adeptus");
-        }
-        catch (Exception e)
-        {
-            ResetDatabase();
-            DialogManager.ShowError(e.Message, "Failed to load database");
-        }
-    }
-
     private void ResetDatabase()
     {
         Pages.Clear();
@@ -122,8 +109,6 @@ public partial class MainWindowViewModel : ViewModelBase
         tablePage.OnIssuesLoaded += UpdateIssueCounters;
         Pages.Add(tablePage);
 
-        AppDbContext.Migrate(filePath);
-
         await tablePage.LoadIssues(filePath);
 
         DialogManager.ShowInfo(DatabaseFileName, "Data loaded");
@@ -135,7 +120,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var opened = 0;
         foreach (var issue in issues)
         {
-            if (!issue.IsDone)
+            if (!issue.Done)
                 opened++;
         }
         TotalIssues = issues.Count;
@@ -173,6 +158,9 @@ public partial class MainWindowViewModel : ViewModelBase
         Pages.Remove(page);
     }
 
+    private bool IsDatabaseOpened => !string.IsNullOrWhiteSpace(DatabaseFilePath);
+
+    //[RelayCommand(CanExecute = nameof(IsDatabaseOpened))]
     [RelayCommand]
     private async Task MakeNewIssue()
     {
@@ -185,8 +173,9 @@ public partial class MainWindowViewModel : ViewModelBase
             var newIssueData = await vm.ShowDialog(this, "Create Issue");
             if (newIssueData != null)
             {
-                using var db = new AppDbContext(DatabaseFilePath);
-                var newIssue = await db.CreateIssue(newIssueData);
+                var newIssue = new Issue(10, newIssueData.Title, newIssueData.Details);
+                // TODO: make database opening
+                newIssue.Save("g:\\Projects\\adeptus.net\\tmp\\demo.adeptus");
                 TablePage.Issues.Add(newIssue);
                 TablePage.SelectedIssue = newIssue;
                 UpdateIssueCounters();

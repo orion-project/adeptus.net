@@ -31,7 +31,7 @@ public class DialogManager
 
     static DialogManager()
     {
-        // Add a listener to changes of the attached register property
+        // Add a listener to changes of the Register attached property
         RegisterProperty.Changed.AddClassHandler<Visual>((sender, e) => {
             ArgumentNullException.ThrowIfNull(sender);
             if (e.GetOldValue<object>() is { } oldValue)
@@ -157,6 +157,8 @@ public class DialogManager
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
         };
 
+        // TODO: store/restore dialog size
+
         return await dialog.ShowDialog<T>(ownerWindow);
     }
 
@@ -167,10 +169,10 @@ public class DialogManager
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var dialogWindow = GetTopLevelForContext(context) as Window
+        var dialog = GetTopLevelForContext(context) as Window
             ?? throw new InvalidOperationException("The method AcceptDialog can only be used on a Window");
 
-        dialogWindow.Close(result);
+        dialog.Close(result);
     }
 
     /// <summary>
@@ -180,10 +182,10 @@ public class DialogManager
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        var dialogWindow = GetTopLevelForContext(context) as Window
+        var dialog = GetTopLevelForContext(context) as Window
             ?? throw new InvalidOperationException("The method CancelDialog can only be used on a Window");
 
-        dialogWindow.Close();
+        dialog.Close();
     }
 
     /// <summary>

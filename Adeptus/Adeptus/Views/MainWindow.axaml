@@ -96,7 +96,6 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_New..." Command="{Binding CreateDatabaseCommand}"/>
                 <MenuItem Header="_Open..." InputGesture="Ctrl+O" Command="{Binding OpenDatabaseCommand}"/>
-                <MenuItem Header="_Load Demo DB" InputGesture="Ctrl+L" Command="{Binding DemoLoadDatabaseCommand}"/>
                 <Separator/>
                 <MenuItem Header="_Exit"/>
             </MenuItem>
