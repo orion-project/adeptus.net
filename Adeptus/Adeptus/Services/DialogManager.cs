@@ -5,7 +5,9 @@ using Avalonia.Controls.Templates;
 using Avalonia.Platform.Storage;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Adeptus.Services;
@@ -14,12 +16,20 @@ namespace Adeptus.Services;
 /// Keeps a correlation between View (as <see cref="Visual"/>) and ViewModels in runtime.
 /// A view associates itself with a view model via the Register attached property.
 /// See in MainWindow.axaml: `services:DialogManager.Register="{Binding}"`
-/// When a view model wants to show a dialog, it queries a <see cref="Visual"/> 
+/// When a view model wants to show a dialog, it queries a <see cref="Visual"/>
 /// associated with it via the <see cref="GetVisualForContext"/> method.
 /// </summary>
 public class DialogManager
 {
     private static readonly Dictionary<object, Visual> RegistrationMapper = [];
+
+    private static Dictionary<string, DialogGeometry>? _dialogGeometries;
+
+    private static string GetDialogGeometryPath() => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "orion-project.org",
+        "Adeptus",
+        "dialog-geometry.json");
 
     /// <summary>
     /// This property handles the registration of Views and ViewModel
@@ -43,6 +53,14 @@ public class DialogManager
                 RegistrationMapper.Add(newValue, sender);
             }
         });
+    }
+
+    private sealed class DialogGeometry
+    {
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
     }
 
     /// <summary>
@@ -157,7 +175,7 @@ public class DialogManager
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
         };
 
-        // TODO: store/restore dialog size
+        RestoreDialogGeometry(dialog, content, ownerWindow);
 
         return await dialog.ShowDialog<T>(ownerWindow);
     }
@@ -172,7 +190,151 @@ public class DialogManager
         var dialog = GetTopLevelForContext(context) as Window
             ?? throw new InvalidOperationException("The method AcceptDialog can only be used on a Window");
 
+        SaveDialogGeometry(dialog);
+
         dialog.Close(result);
+    }
+
+    private static string GetDialogKey(object? dialogContent)
+    {
+        var type = dialogContent?.GetType();
+        return type?.FullName ?? type?.Name ?? "UnknownDialog";
+    }
+
+    private static void RestoreDialogGeometry(Window dialog, object dialogContent, Window ownerWindow)
+    {
+        var dialogGeometries = GetDialogGeometries();
+
+        var dialogKey = GetDialogKey(dialogContent);
+        if (!dialogGeometries.TryGetValue(dialogKey, out var geometry))
+        {
+            return;
+        }
+
+        if (geometry.Width <= 0 || geometry.Height <= 0)
+        {
+            return;
+        }
+
+        if (!IsGeometryValidForCurrentScreens(ownerWindow, geometry))
+        {
+            return;
+        }
+
+        dialog.SizeToContent = SizeToContent.Manual;
+        dialog.Width = geometry.Width;
+        dialog.Height = geometry.Height;
+        dialog.WindowStartupLocation = WindowStartupLocation.Manual;
+        dialog.Position = new PixelPoint((int)Math.Round(geometry.X), (int)Math.Round(geometry.Y));
+    }
+
+    private static bool IsGeometryValidForCurrentScreens(Window ownerWindow, DialogGeometry geometry)
+    {
+        if (!double.IsFinite(geometry.X) || !double.IsFinite(geometry.Y) ||
+            !double.IsFinite(geometry.Width) || !double.IsFinite(geometry.Height))
+        {
+            return false;
+        }
+
+        var screens = ownerWindow.Screens.All;
+        if (screens.Count == 0)
+        {
+            return true;
+        }
+
+        var geometryLeft = geometry.X;
+        var geometryTop = geometry.Y;
+        var geometryRight = geometry.X + geometry.Width;
+        var geometryBottom = geometry.Y + geometry.Height;
+
+        foreach (var screen in screens)
+        {
+            var area = screen.WorkingArea;
+
+            if (geometry.Width > area.Width || geometry.Height > area.Height)
+            {
+                continue;
+            }
+
+            var intersects = geometryRight > area.X &&
+                             geometryLeft < area.X + area.Width &&
+                             geometryBottom > area.Y &&
+                             geometryTop < area.Y + area.Height;
+
+            if (intersects)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void SaveDialogGeometry(Window dialog)
+    {
+        var bounds = dialog.Bounds;
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+        {
+            return;
+        }
+
+        var dialogGeometries = GetDialogGeometries();
+
+        dialogGeometries[GetDialogKey(dialog.Content)] = new DialogGeometry
+        {
+            Width = bounds.Width,
+            Height = bounds.Height,
+            X = dialog.Position.X,
+            Y = dialog.Position.Y,
+        };
+
+        var path = GetDialogGeometryPath();
+        try
+        {
+            var directory = Path.GetDirectoryName(path)
+                ?? throw new InvalidOperationException("Could not resolve dialog geometry directory path.");
+
+            Directory.CreateDirectory(directory);
+
+            File.WriteAllText(path,
+                JsonSerializer.Serialize(dialogGeometries, new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch
+        {
+            // Do not block dialog closing if geometry persistence fails.
+        }
+    }
+
+    private static Dictionary<string, DialogGeometry> GetDialogGeometries()
+    {
+        if (_dialogGeometries is not null)
+        {
+            return _dialogGeometries;
+        }
+
+        _dialogGeometries = new Dictionary<string, DialogGeometry>(StringComparer.Ordinal);
+
+        var path = GetDialogGeometryPath();
+        if (File.Exists(path))
+        {
+            try
+            {
+                var loaded = JsonSerializer.Deserialize<Dictionary<string, DialogGeometry>>(File.ReadAllText(path));
+                if (loaded is not null)
+                {
+                    foreach (var item in loaded)
+                    {
+                        _dialogGeometries[item.Key] = item.Value;
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore invalid/corrupted geometry file and continue with defaults.
+            }
+        }
+
+        return _dialogGeometries;
     }
 
     /// <summary>
