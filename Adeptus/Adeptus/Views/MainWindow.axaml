@@ -11,6 +11,7 @@
         services:DialogManager.Register="{Binding}"
         Icon="/Assets/icon.ico"
         Title="{Binding WindowTitle}"
+        Width="800" Height="450"
         >
 
     <Design.DataContext>
@@ -94,7 +95,6 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top" Margin="0,3,0,3">
             <MenuItem Header="_File">
-                <MenuItem Header="_New..." Command="{Binding CreateDatabaseCommand}"/>
                 <MenuItem Header="_Open..." InputGesture="Ctrl+O" Command="{Binding OpenDatabaseCommand}"/>
                 <Separator/>
                 <MenuItem Header="_Exit"/>
@@ -103,6 +103,8 @@
                 <MenuItem Header="(Demo) Input Text..." Command="{Binding DemoShowInputDialogCommand}"/>
                 <MenuItem Header="(Demo) Show Info" Command="{Binding DemoShowInformationCommand}"/>
                 <MenuItem Header="(Demo) Show Error" Command="{Binding DemoShowErrorCommand}"/>
+                <MenuItem Header="(Demo) Open File..." Command="{Binding DemoOpenFileDialogCommand}"/>
+                <MenuItem Header="(Demo) Save File..." Command="{Binding DemoSaveFileDialogCommand}"/>
             </MenuItem>
             <MenuItem Header="_Issues">
                 <MenuItem Header="New..." InputGesture="Ctrl+N" Command="{Binding MakeNewIssueCommand}"/>
@@ -120,12 +122,12 @@
                         Height="30"
                         Margin="8,0,0,0">
                 <TextBlock Classes="StatusBar" Text="Issues Total:"/>
-                <TextBlock Classes="StatusBar StatusBarValue" Text="{Binding TotalIssues}"/>
+                <TextBlock Classes="StatusBar StatusBarValue" Text="{Binding TotalIssueCount}"/>
                 <TextBlock Classes="StatusBar" Text="Opened:"/>
-                <TextBlock Classes="StatusBar StatusBarValue" Text="{Binding OpenedIssues}"/>
+                <TextBlock Classes="StatusBar StatusBarValue" Text="{Binding OpenedIssueCount}"/>
                 <TextBlock Classes="StatusBar" Text="Displayed:"/>
-                <TextBlock Classes="StatusBar StatusBarValue" Text="{Binding ShownIssues}"/>
-                <TextBlock Classes="StatusBar StatusBarValue" Text="{Binding DatabaseFilePath}"/>
+                <TextBlock Classes="StatusBar StatusBarValue" Text="{Binding ShownIssueCount}"/>
+                <TextBlock Classes="StatusBar StatusBarValue" Text="{Binding DatabasePath}"/>
             </StackPanel>
         </Border>
 

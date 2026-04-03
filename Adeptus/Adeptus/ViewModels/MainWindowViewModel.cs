@@ -12,29 +12,31 @@ namespace Adeptus.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    private const string DefaultWindowTitle = "Adeptus";
+
     public ObservableCollection<PageViewModel> Pages { get; } = [];
 
     [ObservableProperty]
     public partial PageViewModel? SelectedPage { get; set; }
 
     [ObservableProperty]
-    public partial int TotalIssues { get; protected set; }
+    public partial int TotalIssueCount { get; protected set; }
 
     [ObservableProperty]
-    public partial int OpenedIssues { get; protected set; }
+    public partial int OpenedIssueCount { get; protected set; }
 
     [ObservableProperty]
-    public partial int ShownIssues { get; protected set; }
+    public partial int ShownIssueCount { get; protected set; }
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(MakeNewIssueCommand))]
-    public partial string DatabaseFilePath { get; protected set; } = string.Empty;
+    public partial string DatabasePath { get; protected set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string DatabaseFileName { get; protected set; } = string.Empty;
+    public partial string DatabaseName { get; protected set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string WindowTitle { get; protected set; } = "Adeptus";
+    public partial string WindowTitle { get; protected set; } = DefaultWindowTitle;
 
     private TablePageViewModel TablePage
     {
@@ -49,35 +51,15 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task CreateDatabase()
-    {
-        try
-        {
-            var filePath = await DialogManager.SaveFileDialog(this, "Create Database");
-            if (filePath is null)
-                return;
-
-            await LoadDatabase(filePath);
-        }
-        catch (Exception e)
-        {
-            ResetDatabase();
-            DialogManager.ShowError(e.Message, "Failed to create database");
-        }
-    }
-
-    [RelayCommand]
     private async Task OpenDatabase()
     {
         try
         {
-            var filePaths = await DialogManager.OpenFileDialog(this, "Open Database");
-            if (filePaths is null)
+            var folderPath = await DialogManager.SelectFolderDialog(this, "Open Database");
+            if (folderPath is null)
                 return;
 
-            var filePath = filePaths.First();
-
-            await LoadDatabase(filePath);
+            await LoadDatabase(folderPath);
         }
         catch (Exception e)
         {
@@ -89,29 +71,29 @@ public partial class MainWindowViewModel : ViewModelBase
     private void ResetDatabase()
     {
         Pages.Clear();
-        DatabaseFilePath = string.Empty;
-        DatabaseFileName = string.Empty;
-        WindowTitle = "Adeptus";
-        TotalIssues = 0;
-        ShownIssues = 0;
-        OpenedIssues = 0;
+        DatabasePath = string.Empty;
+        DatabaseName = string.Empty;
+        WindowTitle = DefaultWindowTitle;
+        TotalIssueCount = 0;
+        ShownIssueCount = 0;
+        OpenedIssueCount = 0;
     }
 
-    private async Task LoadDatabase(string filePath)
+    private async Task LoadDatabase(string folderPath)
     {
         ResetDatabase();
 
-        DatabaseFilePath = filePath;
-        DatabaseFileName = Path.GetFileName(filePath);
-        WindowTitle = $"{DatabaseFileName} - Adeptus";
+        DatabasePath = folderPath.TrimEnd(Path.DirectorySeparatorChar);
+        DatabaseName = Path.GetFileName(DatabasePath);
+        WindowTitle = $"{DatabaseName} - {DefaultWindowTitle}";
 
         var tablePage = new TablePageViewModel();
         tablePage.OnIssuesLoaded += UpdateIssueCounters;
         Pages.Add(tablePage);
 
-        await tablePage.LoadIssues(filePath);
+        await tablePage.LoadIssues(DatabasePath);
 
-        DialogManager.ShowInfo(DatabaseFileName, "Data loaded");
+        DialogManager.ShowInfo(DatabaseName, "Data loaded");
     }
 
     private void UpdateIssueCounters()
@@ -123,29 +105,9 @@ public partial class MainWindowViewModel : ViewModelBase
             if (!issue.Done)
                 opened++;
         }
-        TotalIssues = issues.Count;
-        ShownIssues = issues.Count;
-        OpenedIssues = opened;
-    }
-
-    [RelayCommand]
-    private async Task DemoShowInputDialog()
-    {
-        var dialogViewModel = new InputDialogViewModel("Type some text:", "");
-        var text = await DialogManager.ShowDialog<string?>(this, "Text Input", dialogViewModel);
-        DialogManager.ShowInfo(string.IsNullOrEmpty(text) ? "Dialog was canceled" : $"The text entered: \"{text}\"");
-    }
-
-    [RelayCommand]
-    private static void DemoShowInformation()
-    {
-        DialogManager.ShowInfo("Information", "This is information.");
-    }
-
-    [RelayCommand]
-    private static void DemoShowError()
-    {
-        DialogManager.ShowError("Error", "Something went wrong. :-(");
+        TotalIssueCount = issues.Count;
+        ShownIssueCount = issues.Count;
+        OpenedIssueCount = opened;
     }
 
     [RelayCommand]
@@ -158,10 +120,9 @@ public partial class MainWindowViewModel : ViewModelBase
         Pages.Remove(page);
     }
 
-    private bool IsDatabaseOpened => !string.IsNullOrWhiteSpace(DatabaseFilePath);
+    private bool IsDatabaseOpened => !string.IsNullOrWhiteSpace(DatabasePath);
 
-    //[RelayCommand(CanExecute = nameof(IsDatabaseOpened))]
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(IsDatabaseOpened))]
     private async Task MakeNewIssue()
     {
         //var page = new IssuePageViewModel(ClosePageRequested);
@@ -197,10 +158,10 @@ public class DesignMainWindowViewModel : MainWindowViewModel
         Pages.Add(new DesignIssuePageViewModel());
         Pages.Add(new DesignIssuePageViewModel());
 
-        TotalIssues = 255;
-        OpenedIssues = 21;
-        ShownIssues = 247;
-        DatabaseFilePath = "/home/user/Adeptus/databases/Demo.adeptus";
-        DatabaseFileName = "Demo.adeptus";
+        TotalIssueCount = 255;
+        OpenedIssueCount = 21;
+        ShownIssueCount = 247;
+        DatabasePath = "/home/user/Adeptus/databases/Demo.adeptus";
+        DatabaseName = "Demo.adeptus";
     }
 }
