@@ -1,8 +1,6 @@
 using Adeptus.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
-using System;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 
 namespace Adeptus.ViewModels;
 
@@ -13,15 +11,20 @@ public partial class TablePageViewModel : PageViewModel
     [ObservableProperty]
     public partial Issue? SelectedIssue { get; set; }
 
-    public Action? OnIssuesLoaded { get; set; }
-
-    public async Task LoadIssues(string fileName)
+    public void DatabaseLoaded(Database database)
     {
         Issues.Clear();
 
-        // TODO
+        foreach (Issue issue in database.Issues)
+        {
+            Issues.Add(issue);
+        }
+    }
 
-        OnIssuesLoaded?.Invoke();
+    public void NewIssueCreated(Issue issue)
+    {
+        Issues.Add(issue);
+        SelectedIssue = issue;
     }
 }
 

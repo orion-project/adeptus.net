@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,6 +12,16 @@ namespace Adeptus.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     private const string DefaultWindowTitle = "Adeptus";
+
+    private Database? _database;
+
+    private Database Database
+    {
+        get
+        {
+            return _database ?? throw new AppError("Database is not opened");
+        }
+    }
 
     public ObservableCollection<PageViewModel> Pages { get; } = [];
 
@@ -43,9 +52,9 @@ public partial class MainWindowViewModel : ViewModelBase
         get
         {
             if (Pages.Count == 0)
-                throw new Exception("Database is not opened");
+                throw new AppError("Database is not opened");
             if (Pages.First() is not TablePageViewModel vm)
-                throw new Exception("Invalid pages structure");
+                throw new AppError("Invalid pages structure");
             return vm;
         }
     }
@@ -70,6 +79,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void ResetDatabase()
     {
+        _database = null;
         Pages.Clear();
         DatabasePath = string.Empty;
         DatabaseName = string.Empty;
@@ -83,22 +93,24 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         ResetDatabase();
 
-        DatabasePath = folderPath.TrimEnd(Path.DirectorySeparatorChar);
-        DatabaseName = Path.GetFileName(DatabasePath);
+        _database = new Database(folderPath);
+
+        DatabasePath = Database.Path;
+        DatabaseName = Database.Name;
         WindowTitle = $"{DatabaseName} - {DefaultWindowTitle}";
 
         var tablePage = new TablePageViewModel();
-        tablePage.OnIssuesLoaded += UpdateIssueCounters;
+        tablePage.DatabaseLoaded(Database);
         Pages.Add(tablePage);
 
-        await tablePage.LoadIssues(DatabasePath);
+        UpdateIssueCounters();
 
-        DialogManager.ShowInfo(DatabaseName, "Data loaded");
+        DialogManager.ShowInfo(Database.Path, "Database loaded");
     }
 
     private void UpdateIssueCounters()
     {
-        var issues = TablePage.Issues;
+        var issues = Database.Issues;
         var opened = 0;
         foreach (var issue in issues)
         {
@@ -132,16 +144,18 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             var vm = new CreateIssueDialogViewModel();
             var newIssueData = await vm.ShowDialog(this, "Create Issue");
-            if (newIssueData != null)
-            {
-                var newIssue = new Issue(10, newIssueData.Title, newIssueData.Details);
-                // TODO: make database opening
-                newIssue.Save("g:\\Projects\\adeptus.net\\tmp\\demo.adeptus");
-                TablePage.Issues.Add(newIssue);
-                TablePage.SelectedIssue = newIssue;
-                UpdateIssueCounters();
-                DialogManager.ShowInfo($"New issue #{newIssue.Id} created");
-            }
+            if (newIssueData is null)
+                return;
+
+            int newId = Database.MakeNewId();
+            var newIssue = new Issue(newId, newIssueData.Title, newIssueData.Details);
+
+            Database.NewIssueCreated(newIssue);
+            TablePage.NewIssueCreated(newIssue);
+
+            UpdateIssueCounters();
+
+            DialogManager.ShowInfo($"New issue #{newIssue.Id} created");
         }
         catch (Exception e)
         {
