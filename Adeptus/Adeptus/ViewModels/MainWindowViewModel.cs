@@ -39,6 +39,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(MakeNewIssueCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ShowSelectedIssueCommand))]
     public partial string DatabasePath { get; protected set; } = string.Empty;
 
     [ObservableProperty]
@@ -99,7 +100,7 @@ public partial class MainWindowViewModel : ViewModelBase
         DatabaseName = Database.Name;
         WindowTitle = $"{DatabaseName} - {DefaultWindowTitle}";
 
-        var tablePage = new TablePageViewModel();
+        var tablePage = new TablePageViewModel(ShowSelectedIssue);
         tablePage.DatabaseLoaded(Database);
         Pages.Add(tablePage);
 
@@ -120,6 +121,22 @@ public partial class MainWindowViewModel : ViewModelBase
         TotalIssueCount = issues.Count;
         ShownIssueCount = issues.Count;
         OpenedIssueCount = opened;
+    }
+
+    private void ShowIssueInNewTab(Issue issue)
+    {
+        var page = new IssuePageViewModel(issue, ClosePageRequested);
+        Pages.Add(page);
+        SelectedPage = page;
+    }
+
+    [RelayCommand(CanExecute = nameof(IsDatabaseOpened))]
+    private void ShowSelectedIssue()
+    {
+        var issue = TablePage.SelectedIssue;
+        if (issue is null)
+            return;
+        ShowIssueInNewTab(issue);
     }
 
     [RelayCommand]

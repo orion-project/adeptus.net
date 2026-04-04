@@ -16,7 +16,11 @@
               AutoGenerateColumns="False"
               IsReadOnly="True"
               GridLinesVisibility="All"
-              Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
+              Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+              DoubleTapped="OnDataGridDoubleTapped">
+        <DataGrid.KeyBindings>
+            <KeyBinding Gesture="Return" Command="{Binding ShowSelectedIssueCommand}"/>
+        </DataGrid.KeyBindings>
         <DataGrid.Columns>
             <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="Auto"/>
             <DataGridTextColumn Header="Summary" Binding="{Binding Title}" Width="*"/>

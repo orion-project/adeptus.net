@@ -108,6 +108,8 @@
             </MenuItem>
             <MenuItem Header="_Issues">
                 <MenuItem Header="New..." InputGesture="Ctrl+N" Command="{Binding MakeNewIssueCommand}"/>
+                <Separator/>
+                <MenuItem Header="Show" InputGesture="Return" Command="{Binding ShowSelectedIssueCommand}"/>
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="_About" Command="{Binding ShowAboutDialogCommand}"/>

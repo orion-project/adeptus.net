@@ -1,26 +1,23 @@
+using Adeptus.Models;
 using System;
 
 namespace Adeptus.ViewModels;
 
 public class IssuePageViewModel : PageViewModel
 {
-    private static int _prevPageIndex = 0;
+    public Issue Issue { get; }
 
-    private readonly int _pageIndex = ++_prevPageIndex;
-
-    public IssuePageViewModel(Action<PageViewModel> closeAction) : base(closeAction)
+    public IssuePageViewModel(Issue issue, Action<PageViewModel> closeAction) : base(closeAction)
     {
+        Issue = issue;
     }
 
-    public string Header
-    {
-        get => $"[#{_pageIndex}] Issue";
-    }
+    public string Header => $"#{Issue.Id} {Issue.Title}";
 }
 
 public class DesignIssuePageViewModel : IssuePageViewModel
 {
-    public DesignIssuePageViewModel() : base(_ => { })
+    public DesignIssuePageViewModel() : base(new Issue(42, "Sample design issue"), _ => { })
     {
     }
 }
