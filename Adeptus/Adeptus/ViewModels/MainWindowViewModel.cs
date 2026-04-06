@@ -70,6 +70,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 return;
 
             await LoadDatabase(folderPath);
+
+            //DialogManager.ShowInfo(Database.Path, "Database loaded");
         }
         catch (Exception e)
         {
@@ -105,8 +107,6 @@ public partial class MainWindowViewModel : ViewModelBase
         Pages.Add(tablePage);
 
         UpdateIssueCounters();
-
-        DialogManager.ShowInfo(Database.Path, "Database loaded");
     }
 
     private void UpdateIssueCounters()
@@ -123,11 +123,20 @@ public partial class MainWindowViewModel : ViewModelBase
         OpenedIssueCount = opened;
     }
 
-    private void ShowIssueInNewTab(Issue issue)
+    private void ShowIssueTab(Issue issue)
     {
-        var page = new IssuePageViewModel(issue, ClosePageRequested);
-        Pages.Add(page);
-        SelectedPage = page;
+        foreach (PageViewModel page in Pages)
+        {
+            if (page is IssuePageViewModel existingPage && existingPage.Issue.Id == issue.Id)
+            {
+                SelectedPage = existingPage;
+                return;
+            }
+        }
+
+        var issuePage = new IssuePageViewModel(issue, ClosePageRequested);
+        Pages.Add(issuePage);
+        SelectedPage = issuePage;
     }
 
     [RelayCommand(CanExecute = nameof(IsDatabaseOpened))]
@@ -136,7 +145,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var issue = TablePage.SelectedIssue;
         if (issue is null)
             return;
-        ShowIssueInNewTab(issue);
+        ShowIssueTab(issue);
     }
 
     [RelayCommand]
@@ -154,9 +163,6 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(IsDatabaseOpened))]
     private async Task MakeNewIssue()
     {
-        //var page = new IssuePageViewModel(ClosePageRequested);
-        //Pages.Add(page);
-        //SelectedPage = page;
         try
         {
             var vm = new CreateIssueDialogViewModel();
