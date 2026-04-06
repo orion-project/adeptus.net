@@ -1,17 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Adeptus.Models;
-
-public static class Tags
-{
-    public const string History = "<adeptus-history/>";
-}
 
 public static class Context
 {
@@ -21,8 +14,6 @@ public static class Context
 
 public class Issue
 {
-    private string? _filePath;
-
     /// <summary>
     /// Issue identifier (auto-generated)
     /// </summary>
@@ -48,6 +39,11 @@ public class Issue
     /// </summary>
     public DateTime Updated { get; private set; }
 
+    /// <summary>
+    /// Full file path where the issue is stored.
+    /// </summary>
+    public string FilePath { get; private set; }
+
     public string Tags {get; private set;} = string.Empty;
 
     /// <summary>
@@ -58,19 +54,15 @@ public class Issue
     /// </summary>
     public bool Invalid {get; private set;}
 
-
     /// <summary>
     /// More items added to the issue during processing - comments, status changes
     /// If the <see cref="History"/> is null, this means the Issue is only quick-read
     /// and contains only basic information which is enough to show it in the table row.
     /// Use the <see cref="Load"/> method to fill the History and get the full issue data.
     /// </summary>
-    public List<HistoryItem>? History { get; private set; }
+    public IList<HistoryItem>? History { get; private set; }
 
-    private static readonly Regex FileNameRegex = new(
-        @"^(?<id>\d+)(?<done>\.done)?\.md$",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase
-    );
+    public bool IsFullyLoaded => History != null;
 
     /// <summary>
     /// Line delimiter.
@@ -85,65 +77,20 @@ public class Issue
     /// </summary>
     public static Issue? QuickLoad(string filePath)
     {
-        string fileName = Path.GetFileName(filePath);
-
-        Match fileNameMatch = FileNameRegex.Match(fileName);
-        if (!fileNameMatch.Success)
-        {
+        (int? id, bool? done) = IssueParser.ParseFileName(filePath);
+        if (id is null || done is null)
             return null;
-        }
 
-        int id = int.Parse(fileNameMatch.Groups["id"].Value);
-        bool done = fileNameMatch.Groups["done"].Success;
-
-        DateTime? updated = null;
-        string place = string.Empty;
-        string title = string.Empty;
-
-        try
-        {
-            int lineNo = 0;
-            using var reader = new StreamReader(filePath);
-            while (!reader.EndOfStream)
-            {
-                lineNo++;
-                var line = reader.ReadLine();
-                if (string.IsNullOrWhiteSpace(line))
-                {
-                    continue;
-                }
-
-                if (updated is null)
-                {
-                    (updated, place) = IssueParser.ParseHeaderLine(line, lineNo);
-                }
-                else
-                {
-                    title = line.Trim();
-                    break;
-                }
-            }
-            if (updated is null || title is null)
-            {
-                throw new AppError("Issue file seems to be empty");
-            }
-        }
-        catch (Exception e)
-        {
-            return new Issue(id, e.Message, e.StackTrace?.ToString())
-            {
-                _filePath = filePath,
-                Invalid = true
-            };
-        }
-
-        return new Issue(id, title)
-        {
-            _filePath = filePath,
-            Updated = updated.Value,
-            Place = place,
-            Done = done,
+        var issue = new Issue
+        { 
+            Id = id.Value,
+            Done = done.Value,
+            FilePath = filePath,
         };
+
+        issue.Load(LoadMode.LatestInfo);
+
+        return issue;
     }
 
     public Issue(int id, string title, string? details = null)
@@ -164,42 +111,189 @@ public class Issue
         Done = false;
         Place = Context.Place;
         Updated = DateTime.Now;
+        FilePath = string.Empty;
         History =
         [
             // The first history item contains
             // - the full issue description: title + text
             // - the issue creation date and place
-            new HistoryItem(history)
+            new HistoryItem
+            {
+                Text = history,
+                Date = DateTime.Now,
+                Place = Context.Place,
+            }
         ];
+    }
+
+    private Issue()
+    {
     }
 
     public void Load()
     {
-        if (string.IsNullOrEmpty(_filePath))
-        {
-            throw new AppError($"Issue #{Id} is now quick-loaded yet");
-        }
+        Load(LoadMode.FullHistory);
+    }
 
+    private enum LoadMode { LatestInfo, FullHistory }
+
+    private void Load(LoadMode mode)
+    {
         int lineNo = 0;
-        using var reader = new StreamReader(_filePath);
-        while (!reader.EndOfStream)
+        string? line = null;
+        try
         {
-            lineNo++;
-            var line = reader.ReadLine();
-            if (string.IsNullOrWhiteSpace(line))
+            if (string.IsNullOrEmpty(FilePath))
+                throw new AppError("Issue is not quick-loaded yet");
+
+            DateTime? lastestUpdated = null;
+            string latestPlace = string.Empty;
+            string latestTitle = string.Empty;
+            List<HistoryItem>? history = null;
+            List<string>? historyLines = null;
+            HistoryItem? historyItem = null;
+            HistoryEditItem? historyEditItem = null;
+
+            string HistoryItemText() => string.Join(NewLine, historyLines!).Trim();
+
+            void FinalizeHistoryItem()
             {
-                continue;
+                if (historyItem == null)
+                    return;
+
+                if (historyEditItem != null)
+                {
+                    historyEditItem.Text = HistoryItemText();
+                    historyItem.AddEditItem(historyEditItem);
+                    historyEditItem = null;
+                }
+                else
+                {
+                    historyItem.Text = HistoryItemText();
+                }
+                history!.Add(historyItem);
+                historyItem = null;
             }
 
-            // TODO
+            using var reader = new StreamReader(FilePath);
+            while (!reader.EndOfStream)
+            {
+                lineNo++;
+                line = reader.ReadLine();
+                if (line == null)
+                    continue;
+
+                if (lastestUpdated is null)
+                {
+                    line = line.Trim();
+                    if (line.Length == 0)
+                        continue;
+
+                    (lastestUpdated, latestPlace) = IssueParser.ParseHeaderLine(line);
+                }
+                else if (history is null)
+                {
+                    line = line.Trim();
+                    if (line.Length == 0)
+                        continue;
+
+                    latestTitle = line;
+
+                    if (mode == LoadMode.LatestInfo)
+                        break;
+
+                    history = [];
+                }
+                else if (line.EndsWith(IssueParser.HistoryMarker))
+                {
+                    line = line[..^IssueParser.HistoryMarker.Length];
+
+                    if (line.StartsWith("###"))
+                    {
+                        if (historyItem == null)
+                            throw new AppError("Header of level 2 (##) expected");
+
+                        if (historyEditItem != null)
+                        {
+                            historyEditItem.Text = HistoryItemText();
+                            historyItem.AddEditItem(historyEditItem);
+                            historyEditItem = null;
+                        }
+                        else
+                        {
+                            historyItem.Text = HistoryItemText();
+                        }
+
+                        (DateTime date, string place) = IssueParser.ParseHeaderLine(line);
+                        historyEditItem = new HistoryEditItem { Date = date, Place = place };
+                        historyLines = [];
+                    }
+                    else if (line.StartsWith("##"))
+                    {
+                        FinalizeHistoryItem();
+
+                        (DateTime date, string place) = IssueParser.ParseHeaderLine(line);
+                        historyItem = new HistoryItem { Date = date, Place = place };
+                        historyLines = [];
+                    }
+                    else
+                    {
+                        throw new AppError("Header line expected");
+                    }
+                }
+                else
+                {
+                    historyLines?.Add(line);
+                }
+            }
+
+            FinalizeHistoryItem();
+
+            if (lastestUpdated is null || latestTitle is null)
+            {
+                throw new AppError("Issue file seems to be empty");
+            }
+
+            Updated = lastestUpdated.Value;
+            Title = latestTitle;
+            Place = latestPlace;
+            History = history;
+        }
+        catch (Exception e)
+        {
+            string title = lineNo > 0 ? $"Line {lineNo}: {e.Message}" : e.Message;
+
+            Invalid = true;
+            Title = title;
+            History =
+            [
+                new HistoryItem
+                {
+                    Text = $"""
+                            {title}
+
+                            ```
+                            {e.StackTrace}
+                            ```
+
+                            Line {lineNo}:
+
+                            ```
+                            {line}
+                            ```
+                            """,
+                    Date = DateTime.Now,
+                    Place = Context.Place,
+                }
+            ];
         }
     }
 
     public void Save(string dir)
     {
-        _filePath = Path.Combine(dir, $"{Id}.md");
+        FilePath = Path.Combine(dir, $"{Id}.md");
 
-        using var stream = new StreamWriter(_filePath, false, Encoding.UTF8);
+        using var stream = new StreamWriter(FilePath, false, Encoding.UTF8);
 
         // The current state on the top to make it easy readable
         stream.WriteLine($"# {Updated:s} ({Place})");
@@ -224,7 +318,7 @@ public class Issue
     {
         if (History == null || History.Count == 0)
         {
-            throw new AppError("Bad issue format");
+            throw new AppError("Issue is not fully loaded yet");
         }
 
         var history = History.First();
@@ -234,97 +328,19 @@ public class Issue
         // Here we suppose they are sorted by date during loading
         if (history.Edits != null && history.Edits.Count > 0)
         {
-            details = history.Edits.Last().Text;
+            details = history.Edits.Last().Text ?? string.Empty;
         }
         else
         {
-            details = history.Text;
+            details = history.Text ?? string.Empty;
         }
-        var lines = details
+        details = string.Join(Environment.NewLine,
+            details
             .Trim()         // just in case, there should not be odd whitespaces
             .Split(NewLine) // don't use Environment.NewLine for cross-platform-ability
             .Skip(1)        // the title
             .SkipWhile(string.IsNullOrWhiteSpace) // empty lines between title and details
-            ;
-        var sb = new StringBuilder();
-        foreach (var line in lines)
-        {
-            sb.Append(line);
-        }
-        return sb.ToString();
-    }
-}
-
-public class HistoryItem(string text)
-{
-    public string Text { get; private set; } = text;
-
-    public DateTime Date { get; private set; } = DateTime.Now;
-
-    public string Place { get; private set; } = Context.Place;
-
-    public List<HistoryEditItem>? Edits { get; private set; }
-
-    public void Write(StreamWriter stream)
-    {
-        stream.WriteLine($"## {Date:s} ({Place}) {Tags.History}");
-        stream.WriteLine();
-        stream.WriteLine(Text);
-        stream.WriteLine();
-
-        if (Edits != null)
-        {
-            foreach (var edit in Edits)
-            {
-                edit.Write(stream);
-            }
-        }
-    }
-}
-
-public class HistoryEditItem(string text)
-{
-    public string Text { get; private set; } = text;
-
-    public string Place { get; private set; } = Context.Place;
-
-    public DateTime Date { get; private set; } = DateTime.Now;
-
-    public void Write(StreamWriter stream)
-    {
-        stream.WriteLine($"### {Date:s} ({Place}) ${Tags.History}");
-        stream.WriteLine();
-    }
-}
-
-static class IssueParser
-{
-    private static readonly Regex headerRegex = new(
-        @"^#\s+(?<updated>\S+)\s+\((?<place>[^)]+)\)\s*$",
-        RegexOptions.Compiled
-    );
-
-    public static (DateTime date, string place) ParseHeaderLine(string line, int lineNo)
-    {
-        var match = headerRegex.Match(line);
-        if (!match.Success)
-        {
-            throw new AppError($"Line {lineNo}: invalid header format");
-        }
-
-        if (!DateTime.TryParseExact(
-            match.Groups["updated"].Value,
-            "s",
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.None,
-            out DateTime date
-        ))
-        {
-            throw new AppError($"Line {lineNo}: invalid date");
-        }
-
-        string place = match.Groups["place"].Value.Trim();
-
-        return (date, place);
+            );
+        return details;
     }
 }

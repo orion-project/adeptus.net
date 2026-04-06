@@ -125,18 +125,28 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private void ShowIssueTab(Issue issue)
     {
-        foreach (PageViewModel page in Pages)
+        try
         {
-            if (page is IssuePageViewModel existingPage && existingPage.Issue.Id == issue.Id)
+            foreach (PageViewModel page in Pages)
             {
-                SelectedPage = existingPage;
-                return;
+                if (page is IssuePageViewModel existingPage && existingPage.Issue.Id == issue.Id)
+                {
+                    SelectedPage = existingPage;
+                    return;
+                }
             }
-        }
 
-        var issuePage = new IssuePageViewModel(issue, ClosePageRequested);
-        Pages.Add(issuePage);
-        SelectedPage = issuePage;
+            if (!issue.IsFullyLoaded)
+                issue.Load();
+
+            var issuePage = new IssuePageViewModel(issue, ClosePageRequested);
+            Pages.Add(issuePage);
+            SelectedPage = issuePage;
+        }
+        catch (Exception e)
+        {
+            DialogManager.ShowError(e.Message, "Failed to show issue");
+        }
     }
 
     [RelayCommand(CanExecute = nameof(IsDatabaseOpened))]

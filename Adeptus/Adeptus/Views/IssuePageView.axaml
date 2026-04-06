@@ -2,8 +2,55 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              xmlns:vm="clr-namespace:Adeptus.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:DataType="vm:IssuePageViewModel"
-             x:Class="Adeptus.Views.IssuePageView">
+             x:Class="Adeptus.Views.IssuePageView"
+             Background="#efefef">
+
+    <Design.DataContext>
+        <vm:DesignIssuePageViewModel/>
+    </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="Border.Section">
+            <Setter Property="Background" Value="{DynamicResource TextControlBackgroundFocused}"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Margin" Value="5,5,5,0"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="StackPanel.Section">
+            <Setter Property="Margin" Value="5,5,5,0"/>
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel>
+        <Border Classes="Section">
+            <Grid ColumnDefinitions="*,Auto">
+                <SelectableTextBlock Grid.Column="0"
+                                     Text="{Binding Title}"
+                                     FontSize="18"
+                                     FontWeight="SemiBold"/>
+                <SelectableTextBlock Grid.Column="1"
+                                     Margin="0,2,2,0"
+                                     Text="{Binding Updated}"/>
+            </Grid>
+        </Border>
+
+        <Border Classes="Section">
+            <md:MarkdownScrollViewer Markdown="{Binding Details}">
+                <md:MarkdownScrollViewer.Styles>
+                    <StyleInclude Source="../Styles/MarkdownViewerStyles.axaml" />
+                </md:MarkdownScrollViewer.Styles>
+            </md:MarkdownScrollViewer>
+        </Border>
+
+        <StackPanel Classes="Section"
+                    Orientation="Horizontal"
+                    Spacing="5">
+            <Button Content="Add Comment..."/>
+            <Button Content="Edit Description..."/>
+        </StackPanel>
+    </StackPanel>
 </UserControl>
